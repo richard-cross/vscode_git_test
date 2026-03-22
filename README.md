@@ -1,43 +1,80 @@
-# Fitness Tracker
+# FitTrack
 
-A web app that analyzes fitness screenshots using AI (Claude Vision), integrates with the Fitbit API, and lets you compare workouts and track long-term calorie burn.
+A standalone mobile app (no server required) that analyzes fitness screenshots with AI and integrates with Fitbit. Compare workouts, track long-term calorie burn, and view trends — all on your phone.
 
 ## Features
 
-- **Screenshot Analysis**: Upload a screenshot from Google Fit, Fitbit, Apple Health, etc. Claude Vision extracts duration, distance, calories, steps, heart rate zones, elevation, and more.
-- **Fitbit Integration**: Connect your Fitbit account via OAuth2 to sync activities automatically.
-- **Workout Comparison**: Select any two (or more) workouts to compare side-by-side with percentage changes and improvement indicators.
-- **Trends & Analytics**: View cumulative calorie burn, weekly summaries, and aggregate statistics across all your workouts.
-- **REST API**: JSON endpoints at `/api/workouts` and `/api/trends` for integration with other tools.
+- **Screenshot Analysis** — Snap or pick a screenshot from any fitness app (Google Fit, Fitbit, Apple Health, etc.). Claude Vision extracts duration, distance, calories, steps, heart rate zones, elevation, pace, and more.
+- **Fitbit Integration** — Connect your Fitbit account via OAuth2. Sync recent activities directly to your device.
+- **Workout Comparison** — Select any two workouts to compare side-by-side with percentage changes and color-coded improvement indicators.
+- **Trends & Analytics** — Calorie burn chart, weekly summaries, and aggregate stats across all your workouts.
+- **100% On-Device** — All data stored locally in SQLite. API calls go directly from your phone to Anthropic/Fitbit. No backend server.
 
 ## Setup
 
 ```bash
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your API keys
-python app.py
+# Install dependencies
+npm install
+
+# Run on your phone with Expo Go
+npx expo start
+
+# Scan the QR code with Expo Go (Android) or Camera (iOS)
 ```
 
-Open http://localhost:5000 in your browser.
+## Build a Standalone APK/IPA
 
-## Configuration
+```bash
+# Install EAS CLI
+npm install -g eas-cli
+eas login
 
-| Variable | Description |
+# Build Android APK (no Play Store account needed)
+eas build --platform android --profile preview
+
+# Build iOS (requires Apple Developer account)
+eas build --platform ios --profile preview
+```
+
+## Configuration (In-App)
+
+Go to the **Settings** tab in the app to enter your keys:
+
+| Setting | Where to get it |
 |---|---|
-| `ANTHROPIC_API_KEY` | Required for screenshot analysis. Get one at https://console.anthropic.com |
-| `FITBIT_CLIENT_ID` | Register at https://dev.fitbit.com |
-| `FITBIT_CLIENT_SECRET` | From your Fitbit app registration |
-| `FITBIT_REDIRECT_URI` | Default: `http://localhost:5000/fitbit/callback` |
+| Anthropic API Key | [console.anthropic.com](https://console.anthropic.com) |
+| Fitbit Client ID | [dev.fitbit.com](https://dev.fitbit.com) |
+| Fitbit Client Secret | Same Fitbit app registration |
+
+All keys are stored locally on your device — nothing is sent to any third-party server.
 
 ## Architecture
 
 ```
-app.py              — Flask routes and main application
-models.py           — SQLite database models (workouts, tokens, summaries)
-image_analyzer.py   — Claude Vision API integration for screenshot parsing
-fitbit_client.py    — Fitbit OAuth2 + activity sync
-comparisons.py      — Workout comparison engine and analytics
-templates/          — Jinja2 HTML templates (Bootstrap 5 dark theme)
-static/style.css    — Custom styles
+app/                     # Expo Router screens (file-based routing)
+  _layout.tsx            # Tab navigation
+  index.tsx              # Dashboard
+  upload.tsx             # Camera/gallery upload + AI analysis
+  compare.tsx            # Side-by-side workout comparison
+  trends.tsx             # Charts and weekly summaries
+  settings.tsx           # API keys and Fitbit connection
+  workout/[id].tsx       # Workout detail view
+src/
+  db/database.ts         # SQLite models and queries
+  services/
+    imageAnalyzer.ts     # Direct Anthropic API calls for screenshot parsing
+    fitbit.ts            # Fitbit OAuth2 + activity sync (on-device)
+    analytics.ts         # Stats, comparison, and trend calculations
+  components/
+    StatCard.tsx          # Reusable metric card
+    WorkoutRow.tsx        # Workout list item
 ```
+
+## Tech Stack
+
+- **Expo / React Native** — Cross-platform mobile
+- **expo-sqlite** — On-device SQLite storage
+- **expo-image-picker** — Camera and gallery access
+- **expo-auth-session** — OAuth2 for Fitbit
+- **Anthropic API** — Claude Vision for screenshot analysis
+- **react-native-chart-kit** — Calorie trend charts

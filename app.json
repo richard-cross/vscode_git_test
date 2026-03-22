@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "FitTrack",
+    "slug": "fitness-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "fittrack",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#1a1a2e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fittrack.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photos of your fitness app screenshots",
+        "NSPhotoLibraryUsageDescription": "Select fitness app screenshots from your gallery"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1a1a2e"
+      },
+      "package": "com.fittrack.app",
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Select fitness screenshots to analyze",
+          "cameraPermission": "Take photos of fitness screenshots"
+        }
+      ]
+    ]
+  }
+}
