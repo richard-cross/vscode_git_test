@@ -2,17 +2,57 @@
 {% block title %}Upload — Fitness Tracker{% endblock %}
 {% block content %}
 <h1 class="mb-4">Upload Fitness Screenshot</h1>
-<p class="text-muted">Upload a screenshot from Google Fit, Fitbit, Apple Health, or any fitness app.
-  The AI will extract workout data automatically.</p>
+<p class="text-muted">Snap or upload a screenshot from Google Fit, Fitbit, Apple Health, or any fitness app.</p>
 
 <div class="card p-4" style="max-width: 600px">
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" id="uploadForm">
     <div class="mb-3">
-      <label for="image" class="form-label">Screenshot</label>
-      <input type="file" class="form-control" name="image" id="image"
-             accept="image/png,image/jpeg,image/gif,image/webp" required>
+      <label class="form-label">Choose source</label>
+      <div class="d-flex gap-2 mb-3">
+        <label class="btn btn-outline-primary flex-fill text-center" for="cameraInput">
+          Camera
+        </label>
+        <label class="btn btn-outline-secondary flex-fill text-center" for="fileInput">
+          Gallery / File
+        </label>
+      </div>
+      <!-- camera capture (mobile) -->
+      <input type="file" class="d-none" name="image" id="cameraInput"
+             accept="image/*" capture="environment" onchange="previewImage(this)">
+      <!-- file picker -->
+      <input type="file" class="d-none" name="image" id="fileInput"
+             accept="image/png,image/jpeg,image/gif,image/webp" onchange="previewImage(this)">
     </div>
-    <button type="submit" class="btn btn-primary">Analyze & Save</button>
+    <div id="previewContainer" class="mb-3 d-none">
+      <img id="preview" class="img-fluid rounded" style="max-height: 400px" alt="preview">
+    </div>
+    <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>
+      Analyze & Save
+    </button>
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewImage(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('preview').src = e.target.result;
+    document.getElementById('previewContainer').classList.remove('d-none');
+    document.getElementById('submitBtn').disabled = false;
+  };
+  reader.readAsDataURL(input.files[0]);
+
+  // Sync the file to the other input so the form always has a file
+  const form = document.getElementById('uploadForm');
+  // Disable the other input so only one is submitted
+  if (input.id === 'cameraInput') {
+    document.getElementById('fileInput').disabled = true;
+  } else {
+    document.getElementById('cameraInput').disabled = true;
+  }
+}
+</script>
 {% endblock %}

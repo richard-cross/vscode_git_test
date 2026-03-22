@@ -20,6 +20,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_from_directory,
     session,
     url_for,
 )
@@ -151,6 +152,11 @@ def trends():
     return render_template(
         "trends.html", stats=stats, trend=trend, weeks=weeks, workouts=workouts
     )
+
+
+@app.route("/uploads/<path:filename>")
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 # ---------------------------------------------------------------------------
