@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Fitness Tracker{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Dashboard</h1>
+  <div>
+    <a href="/upload" class="btn btn-primary">Upload Screenshot</a>
+    {% if fitbit_connected %}
+      <a href="/fitbit/sync" class="btn btn-outline-success">Sync Fitbit</a>
+    {% else %}
+      <a href="/fitbit/connect" class="btn btn-outline-secondary">Connect Fitbit</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if stats and stats.total_workouts %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="fs-2 fw-bold">{{ stats.total_workouts }}</div>
+      <div class="text-muted">Workouts</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="fs-2 fw-bold">{{ stats.total_calories }}</div>
+      <div class="text-muted">Total Calories</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="fs-2 fw-bold">{{ stats.total_distance_miles }}</div>
+      <div class="text-muted">Total Miles</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="fs-2 fw-bold">{{ stats.total_steps }}</div>
+      <div class="text-muted">Total Steps</div>
+    </div>
+  </div>
+</div>
+
+{% if trend|length > 1 %}
+<div class="card mb-4 p-3">
+  <h5>Calorie Burn Over Time</h5>
+  <canvas id="calorieChart" height="80"></canvas>
+</div>
+{% endif %}
+{% endif %}
+
+<h3>Recent Workouts</h3>
+{% if workouts %}
+<div class="table-responsive">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Date</th><th>Type</th><th>Duration</th><th>Distance</th>
+        <th>Calories</th><th>Steps</th><th>Avg HR</th><th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for w in workouts %}
+      <tr class="clickable-row" onclick="location.href='/workout/{{ w.id }}'">
+        <td>{{ w.date }}</td>
+        <td>{{ w.activity_type|capitalize }}</td>
+        <td>{% if w.duration_seconds %}{{ (w.duration_seconds // 60) }}m {{ w.duration_seconds % 60 }}s{% endif %}</td>
+        <td>{% if w.distance_miles %}{{ "%.2f"|format(w.distance_miles) }} mi{% endif %}</td>
+        <td>{% if w.calories_burned %}{{ w.calories_burned|int }}{% endif %}</td>
+        <td>{{ w.steps or '' }}</td>
+        <td>{% if w.avg_heart_rate %}{{ w.avg_heart_rate }} bpm{% endif %}</td>
+        <td><span class="badge bg-{{ 'info' if w.source == 'fitbit' else 'warning' if w.source == 'image' else 'secondary' }}">{{ w.source }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted">No workouts yet. Upload a screenshot or connect Fitbit to get started.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if trend|length > 1 %}
+<script>
+const ctx = document.getElementById('calorieChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ trend|map(attribute='date')|list|tojson }},
+    datasets: [{
+      label: 'Calories Burned',
+      data: {{ trend|map(attribute='calories')|list|tojson }},
+      backgroundColor: 'rgba(255, 99, 132, 0.6)',
+    }, {
+      label: 'Cumulative',
+      data: {{ trend|map(attribute='cumulative')|list|tojson }},
+      type: 'line',
+      borderColor: 'rgba(54, 162, 235, 1)',
+      fill: false,
+      yAxisID: 'y1',
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'Calories' }},
+      y1: { position: 'right', beginAtZero: true, title: { display: true, text: 'Cumulative' }, grid: { drawOnChartArea: false }}
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

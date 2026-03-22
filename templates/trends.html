@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Trends — Fitness Tracker{% endblock %}
+{% block content %}
+<h1 class="mb-4">Trends & Analytics</h1>
+
+{% if stats and stats.total_workouts %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="card p-3 text-center"><div class="fs-3 fw-bold">{{ stats.total_workouts }}</div><div class="text-muted">Total Workouts</div></div></div>
+  <div class="col-md-3"><div class="card p-3 text-center"><div class="fs-3 fw-bold">{{ stats.total_calories }}</div><div class="text-muted">Total Calories</div></div></div>
+  <div class="col-md-3"><div class="card p-3 text-center"><div class="fs-3 fw-bold">{{ stats.avg_calories }}</div><div class="text-muted">Avg Cal/Workout</div></div></div>
+  <div class="col-md-3"><div class="card p-3 text-center"><div class="fs-3 fw-bold">{{ stats.avg_duration_minutes }} min</div><div class="text-muted">Avg Duration</div></div></div>
+</div>
+
+{% if trend|length > 1 %}
+<div class="card p-3 mb-4">
+  <h5>Calorie Burn Over Time</h5>
+  <canvas id="calorieChart" height="80"></canvas>
+</div>
+{% endif %}
+
+{% if weeks %}
+<h3>Weekly Summary</h3>
+<div class="table-responsive">
+  <table class="table table-hover">
+    <thead>
+      <tr><th>Week</th><th>Workouts</th><th>Calories</th><th>Distance (mi)</th><th>Steps</th><th>Duration (min)</th></tr>
+    </thead>
+    <tbody>
+      {% for w in weeks|reverse %}
+      <tr>
+        <td>{{ w.week }}</td>
+        <td>{{ w.workouts }}</td>
+        <td>{{ w.total_calories|round(0)|int }}</td>
+        <td>{{ w.total_distance|round(2) }}</td>
+        <td>{{ w.total_steps }}</td>
+        <td>{{ (w.total_duration / 60)|round(1) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% else %}
+<p class="text-muted">No workout data yet. Upload screenshots or sync Fitbit to see trends.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if trend|length > 1 %}
+<script>
+const ctx = document.getElementById('calorieChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ trend|map(attribute='date')|list|tojson }},
+    datasets: [{
+      label: 'Calories',
+      data: {{ trend|map(attribute='calories')|list|tojson }},
+      backgroundColor: 'rgba(255, 99, 132, 0.6)',
+    }, {
+      label: 'Cumulative',
+      data: {{ trend|map(attribute='cumulative')|list|tojson }},
+      type: 'line',
+      borderColor: 'rgba(54, 162, 235, 1)',
+      fill: false,
+      yAxisID: 'y1',
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'Calories' }},
+      y1: { position: 'right', beginAtZero: true, title: { display: true, text: 'Cumulative' }, grid: { drawOnChartArea: false }}
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+.clickable-row {
+  cursor: pointer;
+}
+.clickable-row:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.card {
+  border-radius: 0.75rem;
+}
